@@ -1,0 +1,17 @@
+# Service Account Key authentication method
+# See Authentication methods below for more config options
+data_source retail:
+  type: bigquery
+  connection:
+    account_info_json_path: /usr/local/airflow/include/gcp/service_account.json 
+    auth_scopes:
+    - https://www.googleapis.com/auth/bigquery
+    - https://www.googleapis.com/auth/cloud-platform
+    - https://www.googleapis.com/auth/drive
+    project_id: "csv-gcp-migration-etl-project"
+    dataset: retail
+    
+soda_cloud:
+  host: cloud.us.soda.io
+  api_key_id: 84e16d8e-abe2-4270-84ad-c3c062a44d88
+  api_key_secret: Mcqqp5i8aK7STYqcEU6hK8ATMISEbZZbyVcLhXkfChsgUbry3VP1QQ

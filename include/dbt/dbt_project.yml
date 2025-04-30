@@ -1,0 +1,9 @@
+name: 'retail'
+version: '1.0'                # Optional, but nice to include
+config-version: 2            # 👈🏽 Required for dbt >= v1.0
+
+profile: 'retail'
+
+models:
+  retail:
+    materialized: table

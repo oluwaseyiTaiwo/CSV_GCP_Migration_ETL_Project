@@ -1,0 +1,8 @@
+version: 2
+sources:
+  - name: retail  # ✅ This is the "source" name — a logical name you choose to group tables
+    database: csv-gcp-migration-etl-project  # ✅ This is your BigQuery project ID
+    schema: retail
+    tables:
+      - name: raw_retail_data         # ✅ This is the actual table name in BigQuery
+      - name: raw_country_data        # ✅ This is another actual table name

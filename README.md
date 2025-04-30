@@ -91,14 +91,13 @@ This project demonstrates a complete ETL pipeline built using Apache Airflow, Go
 
 ## ✅ Soda Checks Summary
 
-| Table                | Check Types                                  |
-|---------------------|-----------------------------------------------|
-| `raw_retail_data`   | Schema validation, missing values, data types |
-| `dim_customer`      | Uniqueness, null checks, schema integrity     |
-| `dim_product`       | Non-negative pricing, duplicates              |
-| `dim_datetime`      | Weekday ranges, null handling                 |
-| `fct_invoices`      | Positive total amounts, referential integrity |
-
+| Table                           | Check Types                                  |
+|---------------------------------|-----------------------------------------------|
+| `raw_retail_data`               | Schema validation, missing values, data types |
+| `customer_dimention_table`      | Uniqueness, null checks, schema integrity     |
+| `product_dimention_table`       | Non-negative pricing, duplicates              |
+| `datetime_dimention_table`      | Weekday ranges, null handling                 |
+| `Retail_invoice_fact_table`     | Positive total amounts, referential integrity |
 ---
 
 

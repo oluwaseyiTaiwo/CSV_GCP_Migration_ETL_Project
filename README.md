@@ -1,48 +1,127 @@
-Overview
-========
+# Enhanced and corrected README with user's real file and task names
+final_readme = """
+# 🛒 CSV to GCP Retail ETL Project
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+This project demonstrates a complete ETL pipeline built using Apache Airflow, Google Cloud Platform (GCP), dbt, and Soda Core. It ingests raw CSV data into Google Cloud Storage, loads it into BigQuery, transforms it into a star schema using dbt, and validates both raw and transformed data using Soda.
 
-Project Contents
-================
+---
 
-Your Astro project contains the following files and folders:
+## 📌 Project Summary
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+- **Project Title**: CSV to GCP Retail ETL Migration
+- **Tools Used**: Airflow, GCS, BigQuery, dbt, Soda Core, Docker, Astro CLI
+- **Pipeline**: Local CSV → GCS → BigQuery (raw) → dbt (transformation) → BigQuery (modeled) → Soda validation
 
-Deploy Your Project Locally
-===========================
+---
 
-1. Start Airflow on your local machine by running 'astro dev start'.
+## 🧠 What I Did
 
-This command will spin up 4 Docker containers on your machine, each for a different Airflow component:
+- Set up a Dockerized Airflow environment using Astronomer runtime.
+- Created an Airflow DAG (`retail.py`) that:
+  - Uploads `Online_Retail.csv` and `country_data.csv` to GCS
+  - Loads the files into `raw_retail_data` and `raw_country_data` tables in BigQuery
+  - Runs Soda checks to validate raw schema and values
+  - Executes dbt transformations to create a star schema
+  - Performs data quality checks post-transformation
+- Designed dimension and fact tables in dbt: `customer_dimention_table`, `product_dimention_table`, `datetime_dimention_table`, `Retail_invoice_fact_table`
+- Used Soda Core to ensure high data integrity throughout
+- Prepared the system for integration with Metabase for future dashboarding
 
-- Postgres: Airflow's Metadata Database
-- Webserver: The Airflow component responsible for rendering the Airflow UI
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+---
 
-2. Verify that all 4 Docker containers were created by running 'docker ps'.
+## 🔄 Pipeline Flow (Airflow DAG Overview)
 
-Note: Running 'astro dev start' will start your project with the Airflow Webserver exposed at port 8080 and Postgres exposed at port 5432. If you already have either of those ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
+### 1. Upload to GCS
+- `Online_Retail.csv` → `raw/Online_Retail.csv`
+- `country_data.csv` → `raw/country_data.csv`
 
-3. Access the Airflow UI for your local Airflow project. To do so, go to http://localhost:8080/ and log in with 'admin' for both your Username and Password.
+### 2. Load to BigQuery
+- `raw/Online_Retail.csv` → `retail.raw_retail_data`
+- `raw/country_data.csv` → `retail.raw_country_data`
 
-You should also be able to access your Postgres Database at 'localhost:5432/postgres'.
+### 3. Raw Data Quality Checks
+- Performed using `run_load_data_quality_checks()`
+- Checks schema, nulls, data types
 
-Deploy Your Project to Astronomer
-=================================
+### 4. Data Transformation via dbt
+- `customer_dimention_table.sql`: Builds customer_id and adds ISO codes
+- `product_dimention_table.sql`: Deduplicates and filters product data
+- `datetime_dimention_table.sql`: Extracts time parts from `InvoiceDate`
+- `Retail_invoice_fact_table.sql`: Combines all keys and computes invoice totals
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
+### 5. Post-Transformation Data Validation
+- Performed using `run_transform_data_quality_checks()`
+- Verifies uniqueness, null handling, and logical constraints
 
-Contact
-=======
+---
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+## 🛠️ Tech Stack
+
+| Tool      | Purpose                                |
+|-----------|----------------------------------------|
+| Airflow   | Orchestrating ETL workflows            |
+| GCS       | Cloud-based raw data storage           |
+| BigQuery  | Scalable cloud data warehouse          |
+| dbt       | SQL-based data modeling                |
+| Soda Core | Data validation and quality monitoring |
+| Docker    | Local development environment          |
+| Astro CLI | Manages and deploys Airflow projects   |
+
+---
+
+## 📊 Data Models Overview
+
+### `customer_dimention_table`
+- Creates `customer_id` from `CustomerID + Country`
+- Adds country ISO from `raw_country_data`
+
+### `product_dimention_table`
+- Unique `product_id` from `StockCode + Description + UnitPrice`
+- Filters for valid products only
+
+### `datetime_dimention_table`
+- Parses multiple `InvoiceDate` formats
+- Extracts year, month, day, hour, minute, weekday
+
+### `Retail_invoice_fact_table`
+- Joins all dimensions and computes invoice totals
+- Surrogate keys ensure consistency across joins
+
+---
+
+## ✅ Soda Checks Summary
+
+| Table                | Check Types                                  |
+|---------------------|-----------------------------------------------|
+| `raw_retail_data`   | Schema validation, missing values, data types |
+| `dim_customer`      | Uniqueness, null checks, schema integrity     |
+| `dim_product`       | Non-negative pricing, duplicates              |
+| `dim_datetime`      | Weekday ranges, null handling                 |
+| `fct_invoices`      | Positive total amounts, referential integrity |
+
+---
+
+
+# 🧪 How to Run
+# Start development environment
+- astro dev start
+
+# Run Airflow task
+- airflow tasks test retail upload_retail_csv_to_gcs 2025-01-01
+
+# Run dbt models
+- source /usr/local/airflow/dbt_venv/bin/activate
+- cd include/dbt
+- dbt run --profiles-dir /usr/local/airflow/include/dbt/
+
+# Run Soda validation
+- source /usr/local/airflow/soda_venv/bin/activate
+- soda scan -d retail -c include/soda/configuration.yml include/soda/checks/*
+
+
+# 🎯 Final Outcome
+- ✅ Successfully ingested and modeled retail data from CSVs into BigQuery
+- ✅ Implemented a robust, reusable Airflow DAG for data orchestration
+- ✅ Built dimensional data models using dbt following best practices
+- ✅ Ensured high data quality using Soda Core validations
+- ✅ Created analytics-ready tables for future reporting and BI dashboards
